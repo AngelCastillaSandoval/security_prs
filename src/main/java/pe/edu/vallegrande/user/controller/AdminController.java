@@ -9,6 +9,7 @@ import pe.edu.vallegrande.user.dto.UserDto;
 import pe.edu.vallegrande.user.service.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/admin/users")
@@ -35,29 +36,43 @@ public class AdminController {
         return userService.findById(id);
     }
 
-    // 🆕 Crear usuario en Firebase + BD
+    // 🔍 Obtener usuario por Email
+    @GetMapping("/email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<UserDto> getUserByEmail(@PathVariable String email) {
+        return userService.findByEmail(email);
+    }
+
+    // ✅ Verificar si un email ya está registrado
+    @GetMapping("/email-exists/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<Boolean>> checkIfEmailExists(@PathVariable String email) {
+        return userService.emailExists(email)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(false)));
+    }
+
+
+    // 🆕 Crear usuario
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<UserDto> createUser(@RequestBody UserCreateDto dto) {
         return userService.createUser(dto);
     }
 
-    // ✏️ Actualizar usuario (excepto email y password)
+    // ✏️ Actualizar usuario
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<UserDto> updateUser(@PathVariable Integer id, @RequestBody UserDto dto) {
         return userService.updateUser(id, dto);
     }
 
-    // 🗑️ Eliminar usuario de Firebase + BD
+    // 🗑️ Eliminar usuario
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Integer id) {
         return userService.deleteUser(id)
-                .thenReturn(ResponseEntity.noContent().<Void>build()) // 204 sin contenido
-                .onErrorResume(e -> {
-                    System.err.println("❌ Error al eliminar usuario: " + e.getMessage());
-                    return Mono.just(ResponseEntity.status(400).<Void>build()); // 👈 forzamos tipo Void
-                });
+                .thenReturn(ResponseEntity.noContent().<Void>build())
+                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().<Void>build()));
     }
 }

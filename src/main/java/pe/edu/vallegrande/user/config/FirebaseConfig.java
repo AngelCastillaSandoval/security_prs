@@ -4,7 +4,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,8 +11,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Base64;
 
+/**
+ * Configura e inicializa Firebase Admin SDK con credenciales en Base64.
+ */
 @Configuration
-@RequiredArgsConstructor
 public class FirebaseConfig {
 
     @Value("${firebase.credentials}")
@@ -21,15 +22,16 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() throws IOException {
-        byte[] decodedBytes = Base64.getDecoder().decode(credentialsBase64);
-        try (ByteArrayInputStream serviceAccount = new ByteArrayInputStream(decodedBytes)) {
+        byte[] decoded = Base64.getDecoder().decode(credentialsBase64);
+
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(decoded)) {
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setCredentials(GoogleCredentials.fromStream(stream))
                     .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase inicializado correctamente desde BASE64");
+                System.out.println("✅ Firebase inicializado correctamente");
             }
         }
     }

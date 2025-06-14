@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: ${PORT:8090}
 
 spring:
   application:
@@ -22,8 +22,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://securetoken.google.com/security-prs1
-          jwk-set-uri: https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+          issuer-uri: ${JWT_ISSUER_URI}
+          jwk-set-uri: ${JWT_JWK_SET_URI}
 
   feign:
     client:
@@ -36,11 +36,9 @@ spring:
 firebase:
   credentials: ${FIREBASE_CREDENTIALS}
 
-
 logging:
   level:
-    io.r2dbc: DEBUG
     pe.edu.vallegrande.user_service: DEBUG
+    io.r2dbc: DEBUG
     org.springframework.web.cors: DEBUG
     org.springframework.security.web.server: DEBUG
-
