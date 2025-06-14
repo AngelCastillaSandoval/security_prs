@@ -1,6 +1,6 @@
 import { ActivityService } from "./../../../../../services/ui/activity.service"
 import { ImageProcessingService } from "./../../../../../services/ui/image-processing.service"
-import { SupabaseService } from "./../../../../../services/ui/supabase.service"
+import { SupabaseReportService } from "../../../../../services/ui/supabase-report.service"
 import { ReportService } from "../../../../../services/report.service"
 import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges, OnDestroy } from "@angular/core"
 import {
@@ -123,7 +123,7 @@ export class ReportModalComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private reportService: ReportService,
-    private supabaseService: SupabaseService,
+    private supabaseService: SupabaseReportService,
     private imageProcessingService: ImageProcessingService,
     private activityService: ActivityService,
     private authService: AuthService,

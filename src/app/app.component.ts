@@ -64,27 +64,33 @@ export class AppComponent implements OnInit {
   }
 
   private checkAuthAndInitialize(): void {
-    const isAuthenticated = this.authService.hasToken()
-    const currentUrl = this.router.url
+    const isAuthenticated = this.authService.hasToken();
+    const currentUrl = this.router.url;
 
-    this.isAuthPage = this.isAuthRoute(currentUrl)
-    this.hideSidebar = this.shouldHideSidebar(currentUrl)
+    this.isAuthPage = this.isAuthRoute(currentUrl);
+    this.hideSidebar = this.shouldHideSidebar(currentUrl);
 
     if (!isAuthenticated) {
-      this.isAuthPage = true
-      this.hideSidebar = false
+      this.isAuthPage = true;
+      this.hideSidebar = false;
       if (!this.isAuthRoute(currentUrl)) {
-        this.router.navigate(["/login"])
+        this.router.navigate(['/login']);
+      }
+    } else {
+      // 👇 Si entra en "/" directamente y está autenticado, redirige al dashboard
+      if (currentUrl === '/' || currentUrl === '') {
+        this.router.navigate(['/dashboard']);
       }
     }
 
+    // ⏳ Mostrar loader solo al inicio (mejor UX)
     setTimeout(() => {
-      this.isInitializing = false
-    }, 300)
+      this.isInitializing = false;
+    }, 300);
   }
 
   private isAuthRoute(url: string): boolean {
-    return url.includes("/login") || url.includes("/register") || url.includes("/forgot-password")
+    return url.includes("/login") || url.includes("/register") || url.includes("/forgot-password");
   }
 
   private shouldHideSidebar(url: string): boolean {

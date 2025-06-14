@@ -13,11 +13,7 @@ export interface ProcessedImage {
 export class ImageProcessingService {
     constructor() { }
 
-    /**
-     * Procesa una imagen para convertirla a JPG, comprimirla y redimensionarla
-     * @param file Archivo de imagen original
-     * @returns Promesa con la imagen procesada
-     */
+
     async processImage(file: File): Promise<ProcessedImage> {
         try {
             // Opciones de compresión
@@ -54,13 +50,16 @@ export class ImageProcessingService {
         }
     }
 
-    /**
-     * Procesa múltiples imágenes en paralelo
-     * @param files Lista de archivos de imagen
-     * @returns Promesa con array de imágenes procesadas
-     */
     async processMultipleImages(files: File[]): Promise<ProcessedImage[]> {
         const processPromises = Array.from(files).map((file) => this.processImage(file))
         return Promise.all(processPromises)
     }
 }
+
+
+
+
+
+
+
+

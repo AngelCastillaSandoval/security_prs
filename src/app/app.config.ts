@@ -1,41 +1,45 @@
-import { type ApplicationConfig, importProvidersFrom } from "@angular/core"
-import { provideRouter, withComponentInputBinding } from "@angular/router"
-import { routes } from "./app.routes"
-import { provideAnimations } from "@angular/platform-browser/animations"
-import { provideHttpClient, withFetch } from '@angular/common/http';
-import { environment } from "../environments/environments"
+import { type ApplicationConfig, importProvidersFrom } from "@angular/core";
+import { provideRouter, withComponentInputBinding } from "@angular/router";
+import { routes } from "./app.routes";
+import { provideAnimations } from "@angular/platform-browser/animations";
+import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { environment } from "../environments/environments";
 
-// Import both the new modular API and the compatibility layer
-import { initializeApp } from "@angular/fire/app"
-import { getAuth } from "@angular/fire/auth"
-import { getFirestore } from "@angular/fire/firestore"
-import { provideFirebaseApp } from "@angular/fire/app"
-import { provideAuth } from "@angular/fire/auth"
-import { provideFirestore } from "@angular/fire/firestore"
-
-// Import the compatibility modules
-import { AngularFireModule } from "@angular/fire/compat"
-import { AngularFireAuthModule } from "@angular/fire/compat/auth"
+// Firebase modular
+import { initializeApp } from "@angular/fire/app";
+import { getAuth } from "@angular/fire/auth";
+import { getFirestore } from "@angular/fire/firestore";
+import { provideFirebaseApp } from "@angular/fire/app";
+import { provideAuth } from "@angular/fire/auth";
+import { provideFirestore } from "@angular/fire/firestore";
+import { AngularFireModule } from "@angular/fire/compat";
+import { AngularFireAuthModule } from "@angular/fire/compat/auth";
 import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'
+// 🔐 Tu interceptor personalizado
+import { AuthInterceptor } from './auth/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withComponentInputBinding()),
     provideAnimations(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
 
-    // Add the AngularFireModule for compatibility with AngularFireAuth
+    // Firebase compat modules
     importProvidersFrom(
       AngularFireModule.initializeApp(environment.firebaseConfig),
       AngularFireAuthModule,
       AngularFirestoreModule,
     ),
 
-    // Keep the new modular API providers if you're using them elsewhere
+    // Firebase modular API
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()), provideAnimationsAsync(),
+    provideFirestore(() => getFirestore()),
   ],
-}
-
+};

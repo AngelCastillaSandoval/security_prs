@@ -29,6 +29,7 @@ export class IssueModalComponent implements OnInit{
       name: '',
       workshopId: 0,
       scheduledTime: '',
+      observation: '',
       state: ''
     };
 
@@ -107,60 +108,60 @@ export class IssueModalComponent implements OnInit{
     }
 
   updateSupplier(): void {
-      if (this.issueForm.id) {
-        this.issueService.updateIssue(this.issueForm.id, this.issueForm).subscribe({
-          next: () => {
-            this.getIssues(); // Refrescar la lista
-            this.closeModal(); // Cerrar el modal
-            // Mostrar alerta de éxito
-            Swal.fire({
-              title: '¡Éxito!',
-              text: 'El tema se actualizó correctamente.',
-              icon: 'success',
-              confirmButtonText: 'Aceptar',
-            });
-          },
-          error: (err) => {
-            console.error('Error updating supplier:', err);
-            Swal.fire({
-              title: 'Error',
-              text: 'Hubo un problema al actualizar el tema.',
-              icon: 'error',
-              confirmButtonText: 'Aceptar',
-            });
-          }
+  if (this.issueForm.id) {
+    this.issueService.updateIssue(this.issueForm.id, this.issueForm).subscribe({
+      next: () => {
+        this.closeModal(); // Cerrar el modal
+        Swal.fire({
+          title: '¡Éxito!',
+          text: 'El tema se actualizó correctamente.',
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+        }).then(() => {
+          window.location.reload(); // 🔄 Recarga la página después de aceptar el mensaje
+        });
+      },
+      error: (err) => {
+        console.error('Error updating supplier:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Hubo un problema al actualizar el tema.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
         });
       }
-    }
+    });
+  }
+}
 
   addIssue(): void {
-      if (this.issueForm.id === 0) {
-        this.issueForm.id = undefined; // O eliminar la propiedad id
-      }
+  if (this.issueForm.id === 0) {
+    this.issueForm.id = undefined; // O eliminar la propiedad id
+  }
 
-      this.issueService.createIssue(this.issueForm).subscribe({
-        next: () => {
-          this.getIssues(); // Refrescar la lista
-          this.closeModal(); // Cerrar el modal
-          Swal.fire({
-            title: 'Éxito',
-            text: 'El tema ha sido agregado correctamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar',
-          });
-        },
-        error: (err: any) => {
-          console.error('Error adding supplier:', err);
-          Swal.fire({
-            title: 'Error',
-            text: 'Hubo un problema al agregar el tema.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar',
-          });
-        }
-
+  this.issueService.createIssue(this.issueForm).subscribe({
+    next: () => {
+      Swal.fire({
+        title: 'Éxito',
+        text: 'El tema ha sido agregado correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+      }).then(() => {
+        window.location.reload(); // 🔄 Recarga la página después de aceptar el mensaje
+      });
+      this.closeModal(); // Cerrar el modal
+    },
+    error: (err: any) => {
+      console.error('Error adding supplier:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'Hubo un problema al agregar el tema.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
       });
     }
+  });
+}
 
     getActiveWorkshops(): void {
       this.workshopService.getActiveWorkshops().subscribe({

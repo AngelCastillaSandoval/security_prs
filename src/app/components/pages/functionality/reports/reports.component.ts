@@ -59,6 +59,7 @@ export class ReportsComponent implements OnInit {
   showReportViewer = false
   selectedReport: ReportDto | ReportWithWorkshopsDto | null = null
   isLoading = false
+  isFilterLoading = false // Nuevo loading específico para filtros
 
   // Control del visor de imágenes
   showImageViewer = false
@@ -71,6 +72,15 @@ export class ReportsComponent implements OnInit {
   currentWorkshopIndex = 0
   loadingWorkshops = false
 
+  // Estados de animación
+  isTableAnimating = false
+  showFilters = true
+
+  // Variables para el control de permisos
+  userRole: string | null = null
+  isAdmin = false
+  isUser = false
+
   constructor(
     private reportService: ReportService,
     private sanitizer: DomSanitizer,
@@ -79,21 +89,75 @@ export class ReportsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.checkUserPermissions()
     this.loadReports()
+  }
+
+  /**
+   * 🔒 Verificar permisos del usuario
+   */
+  private checkUserPermissions(): void {
+    this.userRole = this.authService.getRole()
+    this.isAdmin = this.authService.isAdminSync()
+    this.isUser = this.authService.isUserSync()
+
+    console.log("Rol del usuario:", this.userRole)
+    console.log("Es admin:", this.isAdmin)
+    console.log("Es user:", this.isUser)
+  }
+
+  /**
+   * 🚫 Verificar si el usuario puede realizar operaciones de escritura
+   */
+  private canPerformWriteOperation(): boolean {
+    return this.authService.canWrite()
+  }
+
+  /**
+   * ⚠️ Mostrar mensaje de permisos insuficientes
+   */
+  private showPermissionDeniedAlert(): void {
+    Swal.fire({
+      title: "⚠️ Acceso Restringido",
+      text: "No puedes realizar esta función. Estás en modo usuario, solo puedes ver la información.",
+      icon: "warning",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#f59e0b",
+      backdrop: true,
+      allowOutsideClick: false,
+      customClass: {
+        popup: "swal2-popup-custom",
+      },
+    })
   }
 
   loadReports(): void {
     this.isLoading = true
+    this.isTableAnimating = true
+
     this.reportService.listReportsByFilter().subscribe(
       (data) => {
-        this.reports = data
-        this.extractYearsFromReports()
-        this.filterReports()
-        this.isLoading = false
+        setTimeout(() => {
+          // Simular un pequeño delay para mostrar la animación
+          this.reports = data
+          this.extractYearsFromReports()
+          this.filterReports()
+          this.isLoading = false
+          this.isTableAnimating = false
+        }, 300)
       },
       (error) => {
         this.isLoading = false
-        Swal.fire({ title: "Error", text: "No se pudieron cargar los reportes", icon: "error" })
+        this.isTableAnimating = false
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron cargar los reportes",
+          icon: "error",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+        })
       },
     )
   }
@@ -112,15 +176,18 @@ export class ReportsComponent implements OnInit {
         text: "Este reporte no tiene descripción disponible",
         icon: "info",
         confirmButtonText: "Aceptar",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
       })
       return
     }
 
-    // Mostrar indicador de carga
     this.isLoadingDescription = true
     this.showDescriptionModal = true
     this.descriptionHtml = this.sanitizer.bypassSecurityTrustHtml(
-      '<div class="text-center py-8"><div class="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status" aria-label="loading"></div><p class="mt-2 text-gray-600">Cargando descripción...</p></div>',
+      '<div class="text-center py-8"><div class="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status" aria-label="loading"></div><p class="mt-2 text-gray-600 dark:text-gray-400">Cargando descripción...</p></div>',
     )
 
     try {
@@ -137,12 +204,11 @@ export class ReportsComponent implements OnInit {
         const htmlContent = await response.text()
         console.log("✅ Contenido HTML cargado exitosamente")
 
-        // Verificar si el contenido es válido
         if (htmlContent && htmlContent.trim() !== "") {
           this.descriptionHtml = this.sanitizer.bypassSecurityTrustHtml(htmlContent)
         } else {
           this.descriptionHtml = this.sanitizer.bypassSecurityTrustHtml(
-            '<div class="text-center py-8 text-gray-500"><p>El archivo de descripción está vacío</p></div>',
+            '<div class="text-center py-8 text-gray-500 dark:text-gray-400"><p>El archivo de descripción está vacío</p></div>',
           )
         }
       } else {
@@ -190,7 +256,9 @@ export class ReportsComponent implements OnInit {
   }
 
   filterReports(): void {
-    this.isLoading = true
+    this.isFilterLoading = true
+    this.isTableAnimating = true
+
     const activeValue = this.activeFilter === "active" ? "A" : "I"
     const yearValue = this.selectedYear ? Number(this.selectedYear) : undefined
 
@@ -198,15 +266,28 @@ export class ReportsComponent implements OnInit {
       .listReportsByFilter(this.selectedTrimester, activeValue, yearValue, this.workshopDateStart, this.workshopDateEnd)
       .subscribe(
         (data) => {
-          this.filteredReports = data
-          this.totalPages = Math.ceil(this.filteredReports.length / this.pageSize)
-          this.currentPage = 1
-          this.updatePagedReports()
-          this.isLoading = false
+          setTimeout(() => {
+            // Pequeño delay para mostrar la animación
+            this.filteredReports = data
+            this.totalPages = Math.ceil(this.filteredReports.length / this.pageSize)
+            this.currentPage = 1
+            this.updatePagedReports()
+            this.isFilterLoading = false
+            this.isTableAnimating = false
+          }, 400)
         },
         (error) => {
-          this.isLoading = false
-          Swal.fire({ title: "Error", text: "No se pudieron filtrar los reportes", icon: "error" })
+          this.isFilterLoading = false
+          this.isTableAnimating = false
+          Swal.fire({
+            title: "Error",
+            text: "No se pudieron filtrar los reportes",
+            icon: "error",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          })
         },
       )
   }
@@ -224,6 +305,10 @@ export class ReportsComponent implements OnInit {
     this.workshopDateEnd = ""
     this.activeFilter = "active"
     this.loadReports()
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters
   }
 
   // Métodos de paginación
@@ -283,6 +368,7 @@ export class ReportsComponent implements OnInit {
 
   // Acciones de reporte
   viewReport(reportData: ReportDto | ReportWithWorkshopsDto): void {
+    // Los usuarios pueden ver reportes (operación GET)
     this.isLoading = true
     const reportId = "report" in reportData ? reportData.report.id : reportData.id
 
@@ -294,7 +380,15 @@ export class ReportsComponent implements OnInit {
       },
       (error) => {
         this.isLoading = false
-        Swal.fire({ title: "Error", text: "No se pudieron cargar los detalles del reporte", icon: "error" })
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron cargar los detalles del reporte",
+          icon: "error",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+        })
       },
     )
   }
@@ -305,6 +399,12 @@ export class ReportsComponent implements OnInit {
   }
 
   editReport(reportData: ReportDto | ReportWithWorkshopsDto): void {
+    // 🔒 Verificar permisos antes de editar
+    if (!this.canPerformWriteOperation()) {
+      this.showPermissionDeniedAlert()
+      return
+    }
+
     this.isLoading = true
     const reportId = "report" in reportData ? reportData.report.id : reportData.id
 
@@ -312,6 +412,7 @@ export class ReportsComponent implements OnInit {
       title: "Cargando datos",
       text: "Por favor espere...",
       allowOutsideClick: false,
+      showConfirmButton: false,
       didOpen: () => {
         Swal.showLoading()
       },
@@ -326,12 +427,22 @@ export class ReportsComponent implements OnInit {
       },
       (error) => {
         this.isLoading = false
-        Swal.fire({ title: "Error", text: "No se pudieron cargar los detalles del reporte", icon: "error" })
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron cargar los detalles del reporte",
+          icon: "error",
+        })
       },
     )
   }
 
   createReport(): void {
+    // 🔒 Verificar permisos antes de crear
+    if (!this.canPerformWriteOperation()) {
+      this.showPermissionDeniedAlert()
+      return
+    }
+
     this.selectedReport = null
     this.showReportForm = true
   }
@@ -357,16 +468,25 @@ export class ReportsComponent implements OnInit {
     }
 
     Swal.fire({
-      title: "Éxito",
+      title: "¡Éxito!",
       text: "El reporte ha sido guardado correctamente",
       icon: "success",
-      confirmButtonText: "Aceptar",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
     })
 
     this.filterReports()
   }
 
   deleteReport(reportData: ReportDto | ReportWithWorkshopsDto): void {
+    // 🔒 Verificar permisos antes de eliminar
+    if (!this.canPerformWriteOperation()) {
+      this.showPermissionDeniedAlert()
+      return
+    }
+
     const report = "report" in reportData ? reportData.report : reportData
 
     Swal.fire({
@@ -376,6 +496,8 @@ export class ReportsComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true
@@ -383,7 +505,15 @@ export class ReportsComponent implements OnInit {
           () => {
             this.logReportActivity("eliminó", reportData)
             this.isLoading = false
-            Swal.fire("¡Eliminado!", "El reporte ha sido eliminado correctamente.", "success")
+            Swal.fire({
+              title: "¡Eliminado!",
+              text: "El reporte ha sido eliminado correctamente.",
+              icon: "success",
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+            })
             this.filterReports()
           },
           (error) => {
@@ -395,8 +525,13 @@ export class ReportsComponent implements OnInit {
     })
   }
 
-  // Nuevo método para eliminación definitiva
   deleteReportPermanently(reportData: ReportDto | ReportWithWorkshopsDto): void {
+    // 🔒 Verificar permisos antes de eliminar permanentemente
+    if (!this.canPerformWriteOperation()) {
+      this.showPermissionDeniedAlert()
+      return
+    }
+
     const report = "report" in reportData ? reportData.report : reportData
 
     Swal.fire({
@@ -407,15 +542,23 @@ export class ReportsComponent implements OnInit {
       confirmButtonText: "Sí, eliminar permanentemente",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true
-        // Aquí deberías llamar a un método específico para eliminación permanente
         this.reportService.deleteReportPermanently(report.id).subscribe(
           () => {
             this.logReportActivity("eliminó permanentemente", reportData)
             this.isLoading = false
-            Swal.fire("¡Eliminado permanentemente!", "El reporte ha sido eliminado de forma permanente.", "success")
+            Swal.fire({
+              title: "¡Eliminado permanentemente!",
+              text: "El reporte ha sido eliminado de forma permanente.",
+              icon: "success",
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+            })
             this.filterReports()
           },
           (error) => {
@@ -428,6 +571,12 @@ export class ReportsComponent implements OnInit {
   }
 
   restoreReport(reportData: any): void {
+    // 🔒 Verificar permisos antes de restaurar
+    if (!this.canPerformWriteOperation()) {
+      this.showPermissionDeniedAlert()
+      return
+    }
+
     const report = reportData.report || reportData
 
     Swal.fire({
@@ -446,7 +595,15 @@ export class ReportsComponent implements OnInit {
           () => {
             this.logReportActivity("restauró", reportData)
             this.isLoading = false
-            Swal.fire("¡Restaurado!", "El reporte ha sido restaurado correctamente.", "success")
+            Swal.fire({
+              title: "¡Restaurado!",
+              text: "El reporte ha sido restaurado correctamente.",
+              icon: "success",
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+            })
             this.filterReports()
           },
           (error) => {
@@ -490,12 +647,14 @@ export class ReportsComponent implements OnInit {
   }
 
   downloadPdf(reportData: any): void {
+    // Los usuarios pueden descargar PDFs (operación GET)
     const reportId = "report" in reportData ? reportData.report.id : reportData.id
 
     Swal.fire({
       title: "Generando PDF...",
       text: "Por favor espera un momento",
       allowOutsideClick: false,
+      showConfirmButton: false,
       didOpen: () => {
         Swal.showLoading()
       },
@@ -512,6 +671,15 @@ export class ReportsComponent implements OnInit {
         window.URL.revokeObjectURL(url)
 
         Swal.close()
+        Swal.fire({
+          title: "¡Descarga completada!",
+          text: "El PDF se ha descargado correctamente",
+          icon: "success",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+        })
       },
       error: (error) => {
         Swal.fire("Error", "No se pudo generar el PDF.", "error")
@@ -541,7 +709,10 @@ export class ReportsComponent implements OnInit {
         title: "Información",
         text: "Este taller no tiene imágenes",
         icon: "info",
-        confirmButtonText: "Aceptar",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
       })
     }
   }
@@ -553,6 +724,7 @@ export class ReportsComponent implements OnInit {
       title: "Cargando talleres",
       text: "Por favor espere...",
       allowOutsideClick: false,
+      showConfirmButton: false,
       didOpen: () => {
         Swal.showLoading()
       },
@@ -666,7 +838,10 @@ export class ReportsComponent implements OnInit {
         title: "Información",
         text: "Este taller no tiene imágenes",
         icon: "info",
-        confirmButtonText: "Aceptar",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
       })
     }
   }
@@ -730,5 +905,12 @@ export class ReportsComponent implements OnInit {
 
   hasWorkshops(report: ReportDto | ReportWithWorkshopsDto): boolean {
     return this.getWorkshopsCount(report) > 0
+  }
+
+  /**
+   * 🔒 Getter para saber si puede mostrar botones de escritura en el template
+   */
+  get canShowWriteButtons(): boolean {
+    return this.canPerformWriteOperation()
   }
 }

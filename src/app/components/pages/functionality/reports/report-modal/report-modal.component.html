@@ -7,7 +7,7 @@
 
         <!-- Modal panel con diseño limpio -->
         <div
-            class="relative w-full max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[95vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-enter overflow-hidden border border-gray-200 dark:border-gray-700">
+            class="relative w-full max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl max-h-[95vh] bg-primary-10 dark:bg-gray-800 rounded-xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-enter overflow-hidden border border-gray-200 dark:border-gray-700">
 
             <!-- Encabezado con gradiente colorido -->
             <div
@@ -15,7 +15,7 @@
                 <div class="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/5"></div>
                 <div class="relative flex items-center justify-between">
                     <div class="flex items-center space-x-3 flex-1 min-w-0">
-                        <div class="bg-white/20 backdrop-blur-sm rounded-lg p-2 sm:p-3 flex-shrink-0">
+                        <div class="bg-primary-10/20 backdrop-blur-sm rounded-lg p-2 sm:p-3 flex-shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -35,7 +35,7 @@
 
                     <!-- Botón de cerrar -->
                     <button type="button" (click)="closeModal()"
-                        class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg p-2 transition-all duration-300 transform hover:scale-110">
+                        class="bg-primary-10/20 hover:bg-primary-10/30 backdrop-blur-sm text-white rounded-lg p-2 transition-all duration-300 transform hover:scale-110">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -48,7 +48,7 @@
             <!-- Contenido del modal -->
             <div class="overflow-y-auto max-h-[calc(95vh-120px)] custom-scrollbar">
                 <form [formGroup]="reportForm" (ngSubmit)="saveReport()">
-                    <div class="bg-white dark:bg-gray-800 px-3 sm:px-4 lg:px-6 xl:px-8 pt-4 sm:pt-6 pb-4">
+                    <div class="bg-primary-10 dark:bg-gray-800 px-3 sm:px-4 lg:px-6 xl:px-8 pt-4 sm:pt-6 pb-4">
                         <div class="w-full space-y-6">
 
                             <!-- Datos generales del reporte -->
@@ -115,7 +115,7 @@
                                         </label>
                                         <input type="number" id="year" formControlName="year" [min]="minYear"
                                             [max]="maxYear" placeholder="Ej: 2024"
-                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
                                             [ngClass]="{'border-red-500 dark:border-red-400': isDuplicateReport || (reportForm.get('year')?.invalid && reportForm.get('year')?.touched)}">
 
                                         <!-- Mensajes de error -->
@@ -143,7 +143,7 @@
                                             Trimestre <span class="text-red-500">*</span>
                                         </label>
                                         <select id="trimester" formControlName="trimester"
-                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
                                             [ngClass]="{'border-red-500 dark:border-red-400': isDuplicateReport || (reportForm.get('trimester')?.invalid && reportForm.get('trimester')?.touched)}">
                                             <option [ngValue]="null">Seleccione trimestre</option>
                                             <option value="Enero-Marzo">Enero-Marzo</option>
@@ -215,7 +215,7 @@
                                             ['link', 'image'],
                                             ['clean']
                                         ]
-                                    }" [styles]="{height: '200px'}" class="bg-white dark:bg-gray-700">
+                                    }" [styles]="{height: '200px'}" class="bg-primary-10 dark:bg-gray-700">
                                     </quill-editor>
                                 </div>
 
@@ -255,7 +255,7 @@
                                 </label>
 
                                 <div
-                                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 dark:hover:border-gray-500 transition-colors duration-200 bg-white dark:bg-gray-700">
+                                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 dark:hover:border-gray-500 transition-colors duration-200 bg-primary-10 dark:bg-gray-700">
                                     <input type="file" id="schedule" (change)="onScheduleFileChange($event)"
                                         accept="image/*"
                                         class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/70 transition-colors cursor-pointer">
@@ -324,7 +324,7 @@
                                     class="max-h-[500px] overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                                     <div *ngFor="let workshop of workshopsArray.controls; let i = index"
                                         [formGroupName]="i"
-                                        class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-800 workshop-item hover:shadow-md transition-all duration-200">
+                                        class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-primary-10 dark:bg-gray-800 workshop-item hover:shadow-md transition-all duration-200">
 
                                         <!-- Header del taller -->
                                         <div class="flex justify-between items-center mb-4">
@@ -364,11 +364,11 @@
                                                     (blur)="onWorkshopNameBlur(i); hideAutocompleteDelayed(i)"
                                                     (focus)="onWorkshopNameInput(i)"
                                                     placeholder="Escriba el nombre del taller..."
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
+                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
 
                                                 <!-- Lista de sugerencias -->
                                                 <ul *ngIf="workshopSuggestions[i]?.length && showSuggestions[i]"
-                                                    class="absolute z-20 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 w-full mt-1 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    class="absolute z-20 bg-primary-10 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 w-full mt-1 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                     <li *ngFor="let suggestion of workshopSuggestions[i]"
                                                         (mousedown)="selectWorkshopSuggestion(i, suggestion)"
                                                         class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-white transition-colors border-b border-gray-100 dark:border-gray-600 last:border-b-0">
@@ -408,7 +408,7 @@
                                                 </label>
                                                 <textarea formControlName="description" rows="3"
                                                     placeholder="Describe brevemente el contenido y objetivos del taller..."
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 resize-none"></textarea>
+                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 resize-none"></textarea>
                                             </div>
 
                                             <!-- Fechas del taller -->
@@ -419,7 +419,7 @@
                                                 </label>
                                                 <input type="date" formControlName="workshopDateStart"
                                                     (change)="validateWorkshopDates(i)"
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
+                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
 
                                                 <div *ngIf="workshop.get('workshopDateStart')?.invalid && workshop.get('workshopDateStart')?.touched"
                                                     class="mt-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 text-red-600 dark:text-red-400 text-sm flex items-center">
@@ -446,7 +446,7 @@
                                                 </label>
                                                 <input type="date" formControlName="workshopDateEnd"
                                                     (change)="validateWorkshopDates(i)"
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
+                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
 
                                                 <div *ngIf="workshop.get('workshopDateEnd')?.invalid && workshop.get('workshopDateEnd')?.touched"
                                                     class="mt-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 text-red-600 dark:text-red-400 text-sm flex items-center">
@@ -487,7 +487,7 @@
                                                 </label>
 
                                                 <div
-                                                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 dark:hover:border-gray-500 transition-colors duration-200 bg-white dark:bg-gray-700">
+                                                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-gray-400 dark:hover:border-gray-500 transition-colors duration-200 bg-primary-10 dark:bg-gray-700">
                                                     <div class="text-center">
                                                         <svg xmlns="http://www.w3.org/2000/svg"
                                                             class="mx-auto h-10 w-10 text-gray-400 mb-2" fill="none"
@@ -520,7 +520,7 @@
                                                 <div *ngIf="workshopImages[i] && workshopImages[i].length > 0"
                                                     class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                                                     <div *ngFor="let image of workshopImages[i]; let imgIndex = index"
-                                                        class="relative group border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-all duration-200 cursor-pointer"
+                                                        class="relative group border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-primary-10 dark:bg-gray-800 hover:shadow-md transition-all duration-200 cursor-pointer"
                                                         (click)="openImageViewer(i, imgIndex)">
 
                                                         <!-- Botón eliminar -->
@@ -567,7 +567,7 @@
 
                                     <!-- Mensaje cuando no hay talleres -->
                                     <div *ngIf="workshopsArray.length === 0"
-                                        class="text-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                        class="text-center py-12 text-gray-500 dark:text-gray-400 bg-primary-10 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                                         <div
                                             class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400"
@@ -603,7 +603,7 @@
                     <div
                         class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-700 dark:via-purple-700 dark:to-indigo-700 px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
                         <button type="button" (click)="closeModal()"
-                            class="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-white/30 px-4 py-2 bg-white/20 backdrop-blur-sm text-sm font-medium text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-105">
+                            class="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-white/30 px-4 py-2 bg-primary-10/20 backdrop-blur-sm text-sm font-medium text-white hover:bg-primary-10/30 transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -613,7 +613,7 @@
                         </button>
 
                         <button type="submit" [disabled]="reportForm.invalid || isSubmitting"
-                            class="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent px-4 py-2 bg-white text-blue-600 hover:bg-gray-100 text-sm font-bold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            class="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent px-4 py-2 bg-primary-10 text-blue-600 hover:bg-gray-100 text-sm font-bold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                             [ngClass]="{'opacity-50 cursor-not-allowed': reportForm.invalid || isSubmitting}">
                             <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" fill="none"
                                 viewBox="0 0 24 24">

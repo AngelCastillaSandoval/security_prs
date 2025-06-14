@@ -76,7 +76,7 @@
 
     <!-- Main Content -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+      <div class="flex flex-col sm:flex-row gap-2 mb-5">
         <button (click)="exportToExcel()" class="btn btn-success flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -211,6 +211,9 @@
             </div>
             <button
               (click)="openCreateFamilyModal()"
+              [disabled]="!isActionAllowed()"
+              [class.disabled]="!isActionAllowed()"
+              [title]="!isActionAllowed() ? 'Solo administradores...' : 'Acción normal'"
               class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md flex items-center justify-center hover:bg-blue-700 transition-colors"
             >
               <svg
@@ -280,6 +283,7 @@
                 <th
                   scope="col"
                   class="px-6 py-3 text-left text-xs font-medium tracking-wider hidden lg:table-cell"
+                  *ngIf="!isActive"
                 >
                   Fecha de Finalizacion
                 </th>
@@ -341,12 +345,12 @@
                   </div>
                 </td>
                 <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-400 hidden lg:table-cell">
-                  <span class="truncate max-w-[150px] block">{{ family.reasibAdmission }}</span>
+                  <span class="truncate max-w-[150px] block">{{ family.reasibAdmission.split(' ')[0]}} {{ family.reasibAdmission.split(' ').length > 1 ? '...' : '' }}</span>
                 </td>
                 <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-400 hidden lg:table-cell text-center">
                   <span class="truncate max-w-[150px] block">{{ getFormattedDate(family.created) }}</span>
                 </td>
-                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-400 hidden lg:table-cell text-center">
+                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-400 hidden lg:table-cell text-center" *ngIf="!isActive">
                   <span class="truncate max-w-[150px] block">{{ getFormattedDate(family.deleted) }}</span>
                 </td>
                 <td
@@ -357,7 +361,9 @@
                     <button
                       (click)="openViewModal(family.id)"
                       class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-100 dark:bg-blue-900/50 p-1 sm:p-2 rounded-full transition-colors"
-                      title="Ver detalles"
+                      [disabled]="!isActionAllowed()"
+                      [class.disabled]="!isActionAllowed()"
+                      [title]="!isActionAllowed() ? 'Solo administradores...' : 'Acción normal'"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -378,7 +384,9 @@
                     <button
                       (click)="exportSingleFamilyToPdf(family.id)"
                       class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/30 p-1 sm:p-2 rounded-full transition-colors"
-                      title="Exportar a PDF"
+                      [disabled]="!isActionAllowed()"
+                      [class.disabled]="!isActionAllowed()"
+                      [title]="!isActionAllowed() ? 'Solo administradores...' : 'Acción normal'"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -395,7 +403,9 @@
                       *ngIf="isActive"
                       (click)="eliminarFamilia(family.id)"
                       class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-100 dark:bg-red-900/50 p-1 sm:p-2 rounded-full transition-colors"
-                      title="Eliminar"
+                      [disabled]="!isActionAllowed()"
+                      [class.disabled]="!isActionAllowed()"
+                      [title]="!isActionAllowed() ? 'Solo administradores...' : 'Acción normal'"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -416,7 +426,9 @@
                       *ngIf="!isActive"
                       (click)="reactivarFamilia(family.id)"
                       class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 bg-green-100 dark:bg-green-900/50 p-1 sm:p-2 rounded-full transition-colors"
-                      title="Restaurar"
+                      [disabled]="!isActionAllowed()"
+                      [class.disabled]="!isActionAllowed()"
+                      [title]="!isActionAllowed() ? 'Solo administradores...' : 'Acción normal'"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

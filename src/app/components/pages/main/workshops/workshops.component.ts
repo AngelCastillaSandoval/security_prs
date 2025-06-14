@@ -6,6 +6,8 @@ import { WorkshopService } from '../../../../services/workshop.service';
 import { Workshop, WorkshopResponseDto } from '../../../../interfaces/workshop';
 import { WorkshopModalComponent } from './workshop-modal/workshop-modal.component';
 import { PersonaService } from '../../../../services/person.service';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { ActivityService } from '../../../../services/ui/activity.service';
 
 @Component({
   selector: 'app-workshops',
@@ -45,15 +47,74 @@ export class WorkshopsComponent implements OnInit {
   months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   weekdays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
+  // Variables para el control de permisos
+  userRole: string | null = null
+  isAdmin = false
+  isUser = false
+
   constructor(private workshopService: WorkshopService,
     private personService: PersonaService,
+    private authService: AuthService,
+    private activityService: ActivityService,
   ) { }
 
   ngOnInit(): void {
+    this.checkUserPermissions()
     this.loadWorkshops();
     this.loadPersons();
     this.getPersons();
   }
+
+  /**
+   * 🔒 Verificar permisos del usuario
+   */
+  private checkUserPermissions(): void {
+    this.userRole = this.authService.getRole()
+    this.isAdmin = this.authService.isAdminSync()
+    this.isUser = this.authService.isUserSync()
+
+    console.log("Rol del usuario:", this.userRole)
+    console.log("Es admin:", this.isAdmin)
+    console.log("Es user:", this.isUser)
+  }
+
+  /**
+   * 🚫 Verificar si el usuario puede realizar operaciones de escritura
+   */
+  private canPerformWriteOperation(): boolean {
+    return this.authService.canWrite()
+  }
+
+  private logWorkshopActivity(action: string, workshopData: any): void {
+  this.authService.getLoggedUserInfo().subscribe({
+    next: (currentUser) => {
+      const workshop = "workshop" in workshopData ? workshopData.workshop : workshopData;
+
+      const activity = {
+        imagen: currentUser?.profileImage || "/placeholder.svg?height=40&width=40",
+        nombre: `${currentUser?.name || ""} ${currentUser?.lastName || ""}`.trim() || currentUser?.email || "Usuario",
+        modulo: "Talleres",
+        accion: `${action} el taller "${workshop.name}" (${workshop.startDate} - ${workshop.endDate})`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada: ${action} taller ${workshop.name}`);
+    },
+    error: () => {
+      const workshop = "workshop" in workshopData ? workshopData.workshop : workshopData;
+
+      const activity = {
+        imagen: "/placeholder.svg?height=40&width=40",
+        nombre: "Usuario del sistema",
+        modulo: "Talleres",
+        accion: `${action} el taller "${workshop.name}" (${workshop.startDate} - ${workshop.endDate})`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada (fallback): ${action} taller ${workshop.name}`);
+    },
+  });
+}
 
   loadPersons() {
     this.personService.getPersons().subscribe(
@@ -69,20 +130,20 @@ export class WorkshopsComponent implements OnInit {
 
   getPersonFullNames(personIds: string | number): string {
     if (!personIds) return 'Sin asignar';
-  
+
     const ids = typeof personIds === 'string'
       ? personIds.split(',').map(id => parseInt(id.trim(), 10))
       : [personIds];
-  
+
     const names = ids.map(id => {
       const person = this.personList.find(p => p.idPerson === id);
       return person ? `${person.name} ${person.surname}` : null;
     }).filter(name => name !== null);
-  
+
     return names.length ? names.join(', ') : 'Sin asignar';
   }
-  
-  
+
+
 
 
 

@@ -9,7 +9,6 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
     canActivate: [AuthGuard],
-    canActivateChild: [AuthGuard],
     data: { public: true },
   },
 
@@ -76,6 +75,20 @@ export const routes: Routes = [
             loadComponent: () =>
               import("./components/pages/functionality/transformation/transformation.component").then(
                 (m) => m.TransformationComponent
+              ),
+          },
+        ],
+      },
+      {
+        path: "modulo-praticas-parentales",
+        canMatch: [AuthGuard],
+        children: [
+          {
+            path: "practicas parentales",
+            title: "Gestionar Practicar Parentales",
+            loadComponent: () =>
+              import("./components/pages/functionality/parenting-practices/parenting-practices.component").then(
+                (m) => m.ParentingPracticesComponent
               ),
           },
         ],
@@ -221,8 +234,8 @@ export const routes: Routes = [
   // 🔹 Redirecciones
   {
     path: "",
-    redirectTo: "login",
     pathMatch: "full",
+    redirectTo: "dashboard",
   },
   {
     path: "**",

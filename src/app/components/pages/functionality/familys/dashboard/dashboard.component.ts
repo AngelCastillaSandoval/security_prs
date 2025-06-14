@@ -12,6 +12,7 @@ import { VistaComponent } from '../vista/vista.component';
 import { FamilyExcelService } from '../../../../../report/familyExcel.service';
 import { FamilyPdfService } from '../../../../../report/familyPdf.service';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -53,7 +54,12 @@ export class DashboardComponent implements OnInit {
   showFilterOptions = false;
   isActive: boolean = true;
   darkMode: boolean = false;
-  formSubmitted: boolean = false; // Nueva propiedad para controlar si el formulario ha sido enviado
+  formSubmitted: boolean = false;
+
+  // Control de roles
+  isAdmin: boolean = false;
+  userRole: string | null = null;
+  isAuthorized: boolean = true;
 
   // Dashboard metrics
   activeFamiliesCount: number = 0;
@@ -63,14 +69,80 @@ export class DashboardComponent implements OnInit {
   constructor(
     private familyService: FamilyService,
     private personaService: PersonaService,
+    private authService: AuthService, // Inyectar AuthService
     private familyExcelService: FamilyExcelService,
     private familyPdfService: FamilyPdfService,
     private renderer: Renderer2
   ) { }
 
   ngOnInit(): void {
-    this.loadFamily();
-    this.loadDashboardMetrics();
+    this.checkUserAuthorization();
+  }
+
+  /**
+   * 🔐 Verificar autorización del usuario
+   */
+  checkUserAuthorization(): void {
+    // Verificar si el usuario está autenticado
+    if (!this.authService.hasToken()) {
+      // Si no hay token, no mostrar nada y salir
+      return;
+    }
+
+    // Obtener rol desde localStorage
+    this.userRole = this.authService.getRole();
+
+    // Verificar si es admin
+    this.isAdmin = this.userRole === 'ADMIN';
+
+    if (!this.isAdmin && this.userRole) {
+      // Solo mostrar alerta si hay un rol válido pero no es admin
+      // Esto evita mostrar la alerta cuando se cierra sesión
+      this.isAuthorized = false;
+      this.showUnauthorizedAlert();
+    } else if (this.isAdmin) {
+      // Si es admin, cargar todo normalmente
+      this.isAuthorized = true;
+      this.loadFamily();
+      this.loadDashboardMetrics();
+    }
+
+    // También verificar con Observable para mayor seguridad
+    this.authService.isAdmin().subscribe(isAdminFromToken => {
+      if (!isAdminFromToken && this.isAdmin && this.authService.hasToken()) {
+        // Solo verificar si hay token válido
+        this.isAdmin = false;
+        this.isAuthorized = false;
+        this.showUnauthorizedAlert();
+      }
+    });
+  }
+
+  /**
+   * ⚠️ Mostrar alerta de no autorización
+   */
+  showUnauthorizedAlert(): void {
+    Swal.fire({
+      title: 'Acceso Restringido',
+      text: 'No tienes permisos de administrador para realizar acciones en esta sección.',
+      icon: 'warning',
+      timer: 2000,
+      timerProgressBar: true,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then(() => {
+      // Después de cerrar la alerta, cargar datos en modo solo lectura
+      this.loadFamily();
+      this.loadDashboardMetrics();
+    });
+  }
+
+  /**
+   * 🔒 Verificar si una acción está permitida
+   */
+  isActionAllowed(): boolean {
+    return this.isAdmin && this.isAuthorized;
   }
 
   loadDashboardMetrics(): void {
@@ -164,7 +236,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getFormattedDate(dateString?: string): string {
-    if (!dateString) return '---'; // Handle null or undefined
+    if (!dateString) return '---';
     const date = new Date(dateString);
 
     const day = date.getDate().toString().padStart(2, '0');
@@ -176,6 +248,12 @@ export class DashboardComponent implements OnInit {
   }
 
   eliminarFamilia(id: number) {
+    // 🔒 Verificar autorización antes de ejecutar
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     Swal.fire({
       title: '¿Estás seguro?',
       text: 'Esta acción eliminará la familia de forma lógica.',
@@ -206,6 +284,12 @@ export class DashboardComponent implements OnInit {
   }
 
   reactivarFamilia(id: number) {
+    // 🔒 Verificar autorización antes de ejecutar
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     Swal.fire({
       title: '¿Estás seguro?',
       text: 'Esta acción reactivará la familia.',
@@ -236,6 +320,18 @@ export class DashboardComponent implements OnInit {
           }
         );
       }
+    });
+  }
+
+  /**
+   * ⚠️ Mostrar alerta para acciones no autorizadas
+   */
+  showUnauthorizedActionAlert(): void {
+    Swal.fire({
+      title: 'Acción No Permitida',
+      text: 'No tienes permisos para realizar esta acción. Solo los administradores pueden modificar datos.',
+      icon: 'error',
+      confirmButtonText: 'Entendido'
     });
   }
 
@@ -290,17 +386,27 @@ export class DashboardComponent implements OnInit {
   }
 
   openCreateFamilyModal(): void {
+    // 🔒 Verificar autorización antes de abrir modal
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     this.isCreateFamilyModalOpen = true;
     this.newFamily = this.initializeFamily();
-    this.formSubmitted = false; // Reiniciar el estado de envío del formulario
+    this.formSubmitted = false;
   }
 
-  // Nuevo método para validar y crear familia
   validateAndCreateFamily(form: NgForm): void {
-    this.formSubmitted = true; // Marcar el formulario como enviado
+    // 🔒 Verificar autorización antes de crear
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
+    this.formSubmitted = true;
 
     if (form.invalid) {
-      // Si el formulario es inválido, mostrar mensaje de error
       Swal.fire({
         title: 'Formulario incompleto',
         text: 'Por favor, completa todos los campos requeridos antes de guardar.',
@@ -310,7 +416,6 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // Si el formulario es válido, proceder con la creación
     this.createFamily();
   }
 
@@ -386,7 +491,7 @@ export class DashboardComponent implements OnInit {
 
   resetNewFamily(): void {
     this.newFamily = this.initializeFamily();
-    this.formSubmitted = false; // Reiniciar el estado de envío del formulario
+    this.formSubmitted = false;
   }
 
   closeCreateFamilyModal(): void {
@@ -412,6 +517,12 @@ export class DashboardComponent implements OnInit {
   }
 
   exportToExcel(): void {
+    // 🔒 Verificar autorización para exportar
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     this.familyService.getFamiliesActive().subscribe({
       next: (families) => {
         this.personaService.getPersons().subscribe({
@@ -430,11 +541,16 @@ export class DashboardComponent implements OnInit {
   }
 
   exportToPdf(): void {
+    // 🔒 Verificar autorización para exportar
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     this.familyService.getFamiliesActive().subscribe({
       next: (families) => {
         this.personaService.getPersons().subscribe({
           next: (persons: Person[]) => {
-            // Generate consolidated report with all families
             this.familyPdfService.generateConsolidatedReport(families, persons);
           },
           error: (err: any) => {
@@ -459,11 +575,16 @@ export class DashboardComponent implements OnInit {
   }
 
   exportSingleFamilyToPdf(familyId: number): void {
+    // 🔒 Verificar autorización para exportar
+    if (!this.isActionAllowed()) {
+      this.showUnauthorizedActionAlert();
+      return;
+    }
+
     this.familyService.getFamilyInformationById(familyId).subscribe({
       next: (family: Family) => {
         this.personaService.getPersonsByFamilyId(familyId).subscribe({
           next: (members: Person[]) => {
-            // Generate detailed report for a specific family
             this.familyPdfService.generateDetailedFamilyReport(family, members);
           },
           error: (err: any) => {

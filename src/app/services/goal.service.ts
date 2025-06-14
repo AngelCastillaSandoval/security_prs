@@ -9,7 +9,7 @@ import { environment } from '../../environments/environments';
   providedIn: 'root'
 })
 export class GoalService {
-  private apiUrl = `${environment.ms_goal}/goal`;
+  private apiUrl = `${environment.ms_tranformation}/goal`;
 
   constructor(private http: HttpClient) {}
 

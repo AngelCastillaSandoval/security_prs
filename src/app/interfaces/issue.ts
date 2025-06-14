@@ -4,6 +4,7 @@ export interface Issue {
     workshopId: number;
     workshopName?: string;
     scheduledTime: string;
+    observation: string;
     state: string;
     sesion?: string;
 }

@@ -6,6 +6,29 @@
           Control de Asistencia
         </span>
       </h1>
+      <!-- 🔒 Indicador de rol de usuario -->
+      <div class="mt-2">
+        <span *ngIf="isAdmin"
+          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Admin - Acceso completo
+        </span>
+        <span *ngIf="isUser"
+          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          Usuario - Solo lectura
+        </span>
+      </div>
     </div>
   </header>
   <div class="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -22,31 +45,50 @@
         </select>
       </div>
       <!-- Botón para abrir el modal -->
-      <button class="btn btn-primary d-flex align-items-center gap-2" (click)="openModal()">
-        <i class="bi bi-plus-circle-fill fs-5"></i> Nuevo tema
+      <button *ngIf="!isUser" class="btn btn-primary d-flex align-items-center gap-2" (click)="openModal()">
+        <i class="bi bi-plus-circle-fill fs-5"></i> Nueva Asistencia
       </button>
     </div>
     <!-- Tabla -->
     <div class="overflow-x-auto">
       <table
-        class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm text-left rtl:text-right text-gray-950 dark:text-gray-200">
+        class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm text-left rtl:text-right text-gray-950 dark:text-gray-200 table table-bordered">
         <thead class="text-xs uppercase bg-gray-800 dark:bg-gray-900 text-white">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider">
-              NOMBRE</th>
-            <th *ngFor="let issue of filteredIssues" scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider">
-              <!-- Mostrar los nombres de los temas -->
-              <div>{{ issue.name }}</div>
-            </th>
-          </tr>
+
           <tr>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider">FECHA
             </th>
             <th *ngFor="let issue of filteredIssues" scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider">
+              class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider align-middle text-center">
               <!-- Mostrar las fechas de los temas -->
               <div class="text-sm text-gray-600">{{ issue.scheduledTime | date: 'dd-MMM-yyyy' }}</div>
+            </th>
+            <th class="px-4 py-3 text-xs font-medium text-white text-center" style="background-color: #1382cc;"
+              colspan="4">
+              CONTADORES
+            </th>
+
+          </tr>
+
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider ">
+              NOMBRE</th>
+            <th *ngFor="let issue of filteredIssues" scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-stone-50 uppercase tracking-wider align-middle text-center">
+              <!-- Mostrar los nombres de los temas -->
+              <div>{{ issue.name }}</div>
+            </th>
+            <th class="px-4 py-3 text-xs font-medium text-stone-50 uppercase tracking-wider  text-center"
+              style="background-color: #9acd32;">%A
+            </th>
+            <th class="px-4 py-3 text-xs font-medium text-stone-50 uppercase tracking-wider text-center bg-gray-700"
+              style="background-color: #FFFACD;">%F
+            </th>
+            <th class="px-4 py-3 text-xs font-medium text-stone-50 uppercase tracking-wider text-center bg-gray-700"
+              style="background-color: #ffbf00;">%T
+            </th>
+            <th class="px-4 py-3 text-xs font-medium text-stone-50 uppercase tracking-wider text-center bg-gray-700"
+              style="background-color: #ff7900;">%J
             </th>
           </tr>
         </thead>
@@ -54,17 +96,29 @@
           <tr *ngFor="let person of filteredPersons" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ person.name }}, {{person.surname}}</td>
             <td *ngFor="let issue of filteredIssues" (click)="openEditModalForAttendance(issue.id, person.idPerson)"
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer hover:bg-gray-100">
+              class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer hover:bg-gray-100 align-middle text-center">
               <span *ngIf="getAttendanceStatus(issue.id, person.idPerson) === 'A'"
-                class="text-green-600 font-bold">✔️</span> <!-- Asistencia a tiempo -->
+                class="text-green-600 font-bold align-middle text-center">✔️</span> <!-- Asistencia a tiempo -->
               <span *ngIf="getAttendanceStatus(issue.id, person.idPerson) === 'F'"
-                class="text-red-600 font-bold">❌</span> <!-- Falta -->
+                class="text-red-600 font-bold align-middle text-center">❌</span> <!-- Falta -->
               <span *ngIf="getAttendanceStatus(issue.id, person.idPerson) === 'T'"
-                class="text-yellow-600 font-bold">T</span> <!-- Tarde -->
+                class="text-yellow-600 font-bold align-middle text-center">T</span> <!-- Tarde -->
               <span *ngIf="getAttendanceStatus(issue.id, person.idPerson) === 'J'"
-                class="text-blue-600 font-bold">J</span> <!-- Justificado -->
+                class="text-blue-600 font-bold align-middle text-center">J</span> <!-- Justificado -->
               <span *ngIf="getAttendanceStatus(issue.id, person.idPerson) === 'none'" class="text-gray-400">-</span>
               <!-- Sin asistencia (vacío) -->
+            </td>
+            <td class="px-4 py-4 text-green-600 font-bold text-center bg-gray-50" style="background-color: #9acd32;">
+              ✔️ {{ countAttendance(person.idPerson, 'A') }}
+            </td>
+            <td class="px-4 py-4 text-red-600 font-bold text-center bg-gray-50" style="background-color: #FFFACD;">
+              ❌ {{ countAttendance(person.idPerson, 'F') }}
+            </td>
+            <td class="px-4 py-4 text-blue-600 font-bold text-center bg-gray-50" style="background-color: #ffbf00;">
+              T {{ countAttendance(person.idPerson, 'T') }}
+            </td>
+            <td class="px-4 py-4 text-blue-600 font-bold text-center bg-gray-50" style="background-color: #ff7900;">
+              J {{ countAttendance(person.idPerson, 'J') }}
             </td>
           </tr>
         </tbody>

@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IssueModalComponent } from './issue-modal/issue-modal.component';
 import { finalize } from 'rxjs/operators';
+import { ActivityService } from '../../../../services/ui/activity.service';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 
 @Component({
@@ -39,8 +41,14 @@ export class IssuesComponent implements OnInit{
   itemsPerPage: number = 5;
   totalItems: number = 0;
 
+  // Variables para el control de permisos
+  userRole: string | null = null
+  isAdmin = false
+  isUser = false
+
+
   editSupplier: Issue | null = null;
-  issueForm: Issue = { id: 0, name: '', workshopId: 0, scheduledTime: '', state: 'A' };
+  issueForm: Issue = { id: 0, name: '', workshopId: 0, scheduledTime: '', observation: '', state: 'A' };
   openModalForCreate() {
     this.isEditMode = false;
     this.issueForm = {
@@ -48,20 +56,93 @@ export class IssuesComponent implements OnInit{
       name: '',
       workshopId: 0,
       scheduledTime: '',
+      observation: '',
       state: 'A'
     };
     this.isModalOpen = true;
   }
   constructor(
-    private workshopService: WorkshopService
+    private workshopService: WorkshopService,
+    private activityService: ActivityService,
+        private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.checkUserPermissions();
     this.getIssues();
     this.getActiveWorkshops();
 
     this.items.sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  /**
+   * 🔒 Verificar permisos del usuario
+   */
+  private checkUserPermissions(): void {
+    this.userRole = this.authService.getRole()
+    this.isAdmin = this.authService.isAdminSync()
+    this.isUser = this.authService.isUserSync()
+
+    console.log("Rol del usuario:", this.userRole)
+    console.log("Es admin:", this.isAdmin)
+    console.log("Es user:", this.isUser)
+  }
+
+  /**
+   * 🚫 Verificar si el usuario puede realizar operaciones de escritura
+   */
+  private canPerformWriteOperation(): boolean {
+    return this.authService.canWrite()
+  }
+
+  /**
+     * ⚠️ Mostrar mensaje de permisos insuficientes
+     */
+    private showPermissionDeniedAlert(): void {
+      Swal.fire({
+        title: "⚠️ Acceso Restringido",
+        text: "No puedes realizar esta función. Estás en modo usuario, solo puedes ver la información.",
+        icon: "warning",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#f59e0b",
+        backdrop: true,
+        allowOutsideClick: false,
+        customClass: {
+          popup: "swal2-popup-custom",
+        },
+      })
+    }
+
+  private logIssueActivity(action: string, issueData: any): void {
+  this.authService.getLoggedUserInfo().subscribe({
+    next: (currentUser) => {
+      const issue = "issue" in issueData ? issueData.issue : issueData;
+
+      const activity = {
+        imagen: currentUser?.profileImage || "/placeholder.svg?height=40&width=40",
+        nombre: `${currentUser?.name || ""} ${currentUser?.lastName || ""}`.trim() || currentUser?.email || "Usuario",
+        modulo: "Incidencias",
+        accion: `${action} la incidencia "${issue.title}" (#${issue.id})`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada: ${action} incidencia ${issue.title} (#${issue.id})`);
+    },
+    error: () => {
+      const issue = "issue" in issueData ? issueData.issue : issueData;
+
+      const activity = {
+        imagen: "/placeholder.svg?height=40&width=40",
+        nombre: "Usuario del sistema",
+        modulo: "Incidencias",
+        accion: `${action} la incidencia "${issue.title}" (#${issue.id})`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada (fallback): ${action} incidencia ${issue.title} (#${issue.id})`);
+    },
+  });
+}
 
   getIssues(): void {
     this.isLoading = true;
@@ -169,7 +250,7 @@ export class IssuesComponent implements OnInit{
   // Abrir el modal en modo agregar
   openModal(): void {
     this.isEditMode = false;
-    this.issueForm = { id: 0, name: '', workshopId: 0, scheduledTime: this.getCurrentDateTime(), state: 'A' };
+    this.issueForm = { id: 0, name: '', workshopId: 0, scheduledTime: this.getCurrentDateTime(), observation: '', state: 'A' };
     this.isModalOpen = true;
   }
 
@@ -189,62 +270,63 @@ export class IssuesComponent implements OnInit{
 
 
   addIssue(): void {
-    if (this.issueForm.id === 0) {
-      this.issueForm.id = undefined; // O eliminar la propiedad id
-    }
+  if (this.issueForm.id === 0) {
+    this.issueForm.id = undefined; // O eliminar la propiedad id
+  }
 
-    this.issueService.createIssue(this.issueForm).pipe(
-      finalize(() => {
-        this.closeModal(); // ✅ cerrar modal después de actualizar
-      })
-    ).subscribe({
+  this.issueService.createIssue(this.issueForm).pipe(
+    finalize(() => {
+      this.closeModal(); // ✅ cerrar modal después de actualizar
+    })
+  ).subscribe({
+    next: () => {
+      Swal.fire({
+        title: 'Éxito',
+        text: 'El tema ha sido agregado correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+      }).then(() => {
+        window.location.reload(); // 🔄 Recarga la página después de aceptar el mensaje
+      });
+    },
+    error: (err: any) => {
+      console.error('Error adding supplier:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'Hubo un problema al agregar el tema.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
+    }
+  });
+}
+
+  updateSupplier(): void {
+  if (this.issueForm.id) {
+    this.issueService.updateIssue(this.issueForm.id, this.issueForm).subscribe({
       next: () => {
-        this.getIssues(); // ⚠️ esto es async
+        this.closeModal(); // Cerrar el modal
         Swal.fire({
-          title: 'Éxito',
-          text: 'El tema ha sido agregado correctamente.',
+          title: '¡Éxito!',
+          text: 'El tema se actualizó correctamente.',
           icon: 'success',
           confirmButtonText: 'Aceptar',
+        }).then(() => {
+          window.location.reload(); // 🔄 Recarga la página después de aceptar el mensaje
         });
       },
-      error: (err: any) => {
-        console.error('Error adding supplier:', err);
+      error: (err) => {
+        console.error('Error updating supplier:', err);
         Swal.fire({
           title: 'Error',
-          text: 'Hubo un problema al agregar el tema.',
+          text: 'Hubo un problema al actualizar el tema.',
           icon: 'error',
           confirmButtonText: 'Aceptar',
         });
       }
     });
   }
-
-  updateSupplier(): void {
-    if (this.issueForm.id) {
-      this.issueService.updateIssue(this.issueForm.id, this.issueForm).subscribe({
-        next: () => {
-          this.getIssues(); // Refrescar la lista
-          this.closeModal(); // Cerrar el modal
-          // Mostrar alerta de éxito
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'El tema se actualizó correctamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar',
-          });
-        },
-        error: (err) => {
-          console.error('Error updating supplier:', err);
-          Swal.fire({
-            title: 'Error',
-            text: 'Hubo un problema al actualizar el tema.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar',
-          });
-        }
-      });
-    }
-  }
+}
 
 
   // Ajusta el tipo de datos a un array de objetos con id y name
@@ -390,8 +472,16 @@ export class IssuesComponent implements OnInit{
     this.isModalOpen = false;
   }
 
-  handleSaveIssue(issue: Issue) {
-    // lógica para guardar el tema
-    this.isModalOpen = false;
+  // ...existing code...
+handleSaveIssue(issue: Issue) {
+  // Si es edición, llama a updateSupplier, si no, a addIssue
+  if (this.isEditMode) {
+    this.issueForm = { ...issue };
+    this.updateSupplier();
+  } else {
+    this.issueForm = { ...issue };
+    this.addIssue();
   }
+}
+// ...existing code...
 }

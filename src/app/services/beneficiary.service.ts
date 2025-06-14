@@ -1,8 +1,8 @@
 // service/beneficiarios.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, from } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { BeneficiaryDTO, EducationDTO, HealthDTO } from '../interfaces/beneficiaryDTO';
 import { environment } from '../../environments/environments';
 import { AuthService } from '../auth/services/auth.service';
@@ -13,23 +13,7 @@ import { AuthService } from '../auth/services/auth.service';
 export class BeneficiaryService {
   private apiUrl = `${environment.ms_beneficiario}/api/persons`;
 
-  private apiUrlEducation = `${environment.ms_beneficiario_education}/education`;
-  private apiUrlHealt = `${environment.ms_beneficiario_health}/health`;
-
-  constructor(private http: HttpClient, private authService: AuthService) {
-    this.GetEducation();
-    this.GetHealth();
-  }
-
-   public GetEducation(): Observable<EducationDTO[]> {
-     console.log ('llamado a la api education')
-     return this.http.get<EducationDTO []>(this.apiUrlEducation);
-   }
-
-   public GetHealth(): Observable<HealthDTO[]> {
-     console.log ('llamado a la api health')
-     return this.http.get<HealthDTO []>(this.apiUrlHealt);
-   }
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   private withAuthHeaders(): Observable<HttpHeaders> {
     return from(this.authService.getToken()).pipe(
@@ -43,6 +27,7 @@ export class BeneficiaryService {
     );
   }
 
+  // DEVUELVE A TODOS LOS BENEFICIARIOS ACTIVOS - INACTIVOS
   getPersonsByTypeKinshipAndState(typeKinship: string, state: string): Observable<BeneficiaryDTO[]> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -51,6 +36,7 @@ export class BeneficiaryService {
     );
   }
 
+  // DEVUELVE A LOS APADRINADOS ACTIVOS - INACTIVOS
   getPersonsBySponsoredAndState(sponsored: string, state: string): Observable<BeneficiaryDTO[]> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -59,6 +45,7 @@ export class BeneficiaryService {
     );
   }
 
+  // DEVUELVE LOS DATOS (PERSONAL - EDUCACION - SALUD) DE LOS BENEFICIARIOS Y APADRINADOS 
   getPersonByIdWithDetails(id: number): Observable<BeneficiaryDTO> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -67,6 +54,7 @@ export class BeneficiaryService {
     );
   }
 
+  // CAMBIA EL ESTADO A INACTIVO DE LOS BENEFICIARIOS Y APADRINADOS 
   deletePerson(id: number): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -75,6 +63,7 @@ export class BeneficiaryService {
     );
   }
 
+  // CAMBIA EL ESTADO A ACTIVO DE LOS BENEFICIARIOS Y APADRINADOS 
   restorePerson(id: number): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -83,6 +72,7 @@ export class BeneficiaryService {
     );
   }
 
+  // ACTUALIZA LOS DATOS PERSONALES DE LOS BENEFICIARIOS Y APADRINADOS 
   updatePersonData(id: number, person: BeneficiaryDTO): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -91,6 +81,7 @@ export class BeneficiaryService {
     );
   }
 
+  //CORRIGE LOS DATOS (EDUCACION - SALUD) DE LOS BENEFICIARIOS Y APADRINADOS 
   correctEducationAndHealth(id: number, educationData: any): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -99,6 +90,7 @@ export class BeneficiaryService {
     );
   }
 
+  //ACTUALIZA LOS DATOS DE (SALUD - EDUCACION) DE LOS BENEFICIARIOS Y APADRINADOS 
   updatePerson(id: number, person: BeneficiaryDTO): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
@@ -107,11 +99,48 @@ export class BeneficiaryService {
     );
   }
 
+  // REGISTRA UN NUEVO APADRINADO O BENEFICIARIO
   registerPerson(person: BeneficiaryDTO): Observable<void> {
     return this.withAuthHeaders().pipe(
       switchMap(headers =>
         this.http.post<void>(`${this.apiUrl}/register`, person, { headers })
       )
+    );
+  }
+
+  // DEVUEVE EL CALCULO PARA MOSTRAR EN DASHBOARD
+  getBeneficiariosStats(): Observable<any> {
+    return forkJoin([
+      this.getPersonsByTypeKinshipAndState('HIJO', 'A'), // Beneficiarios Activos
+      this.getPersonsByTypeKinshipAndState('HIJO', 'I'), // Beneficiarios Inactivos
+      this.getPersonsBySponsoredAndState('NO', 'A'), // No Apadrinados Activos
+      this.getPersonsBySponsoredAndState('NO', 'I'), // No Apadrinados Inactivos
+      this.getPersonsBySponsoredAndState('SI', 'A'), // Apadrinados Activos
+      this.getPersonsBySponsoredAndState('SI', 'I'), // Apadrinados Inactivos
+    ]).pipe(
+      map(([activos, inactivos, noApadrinadosActivos, noApadrinadosInactivos, apadrinadosActivos, apadrinadosInactivos]) => {
+        // Filtrar solo los hijos
+        const hijosActivos = activos.filter(person => person.typeKinship === 'HIJO');
+        const hijosInactivos = inactivos.filter(person => person.typeKinship === 'HIJO');
+        
+        // Filtrar hijos mayores o iguales a 18 años
+        const hijosActivosJovenes = hijosActivos.filter(person => person.age >= 18);
+        const hijosInactivosJovenes = hijosInactivos.filter(person => person.age >= 18);
+        
+        const hijosNoApadrinadosActivos = noApadrinadosActivos.filter(person => person.typeKinship === 'HIJO');
+        const hijosNoApadrinadosInactivos = noApadrinadosInactivos.filter(person => person.typeKinship === 'HIJO');
+        const hijosApadrinadosActivos = apadrinadosActivos.filter(person => person.typeKinship === 'HIJO');
+        const hijosApadrinadosInactivos = apadrinadosInactivos.filter(person => person.typeKinship === 'HIJO');
+
+        return {
+          totalBeneficiarios: hijosActivos.length + hijosInactivos.length,
+          beneficiariosActivos: hijosActivos.length,
+          beneficiariosInactivos: hijosInactivos.length,
+          totalNoApadrinados: hijosNoApadrinadosActivos.length + hijosNoApadrinadosInactivos.length,
+          totalApadrinados: hijosApadrinadosActivos.length + hijosApadrinadosInactivos.length,
+          totalBeneficiariosJovenes: hijosActivosJovenes.length + hijosInactivosJovenes.length,
+        };
+      })
     );
   }
 }

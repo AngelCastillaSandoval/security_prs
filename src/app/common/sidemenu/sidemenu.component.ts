@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener, Output, EventEmitter } from '@angular/core';
 import { Router, RouterModule, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MENU_ITEMS } from '../../utils/menu-items';
+import { MENU_ITEMS, MenuItem } from '../../utils/menu-items';
 import { AuthService } from '../../auth/services/auth.service';
 import { ThemeService } from '../../services/ui/theme.service';
 import { SidebarService } from '../../services/ui/sidebar.service';
@@ -15,18 +15,21 @@ import { BehaviorSubject } from 'rxjs';
   styleUrls: ['./sidemenu.component.css']
 })
 export class SidemenuComponent implements OnInit {
+  @Output() toggleMobileMenu = new EventEmitter<boolean>();
+
+  menuItems: MenuItem[] = [];
+  userRole: string | null = null;
+
   dropdownIndex: number | null = null;
   subDropdownIndex: Map<number, number | null> = new Map();
   grandSubDropdownIndex: Map<number, Map<number, number | null>> = new Map();
 
-  menuItems = MENU_ITEMS;
   isSidebarCollapsed = new BehaviorSubject<boolean>(false);
   isSidebarCollapsed$ = this.isSidebarCollapsed.asObservable();
+
   isMobile = false;
   isMobileMenuOpen = false;
   darkMode$ = this.themeService.darkMode$;
-
-  @Output() toggleMobileMenu = new EventEmitter<boolean>();
 
   constructor(
     private router: Router,
@@ -35,20 +38,10 @@ export class SidemenuComponent implements OnInit {
     private sidebarService: SidebarService
   ) { }
 
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.checkScreenSize();
-  }
-
   ngOnInit(): void {
-    const userRole = this.authService.getRole(); // viene desde localStorage
+    this.userRole = this.authService.getRole();
+    this.menuItems = this.filterMenuByRole(MENU_ITEMS, this.userRole);
 
-    // ✅ Si no es ADMIN, filtramos el ítem "Usuarios"
-    if (userRole !== 'ADMIN') {
-      this.menuItems = this.menuItems.filter(item => item.title !== 'Usuarios');
-    }
-
-    // Verificar si hay una preferencia guardada para el sidebar
     const savedState = localStorage.getItem('sidebar-collapsed');
     if (savedState) {
       this.isSidebarCollapsed.next(savedState === 'true');
@@ -56,10 +49,14 @@ export class SidemenuComponent implements OnInit {
 
     this.checkScreenSize();
 
-    // Suscribirse al estado del sidebar móvil
     this.sidebarService.mobileSidebarOpen$.subscribe(isOpen => {
       this.isMobileMenuOpen = isOpen;
     });
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkScreenSize();
   }
 
   checkScreenSize(): void {
@@ -81,7 +78,6 @@ export class SidemenuComponent implements OnInit {
 
   toggleDropdown(index: number): void {
     if (this.isSidebarCollapsed.value && !this.isMobile) {
-      // Si está colapsado, expandir primero
       this.isSidebarCollapsed.next(false);
       setTimeout(() => {
         this.dropdownIndex = this.dropdownIndex === index ? null : index;
@@ -110,6 +106,18 @@ export class SidemenuComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout(); // cierre de sesión
+    this.authService.logout();
+  }
+
+  /**
+   * Filtra recursivamente el menú según el rol del usuario.
+   */
+  private filterMenuByRole(items: MenuItem[], role: string | null): MenuItem[] {
+    return items
+      .filter(item => !item.role || item.role.includes(role!))
+      .map(item => ({
+        ...item,
+        children: item.children ? this.filterMenuByRole(item.children, role) : undefined
+      }));
   }
 }

@@ -16,8 +16,8 @@
         <div class="flex justify-center mb-6">
             <div class="text-center">
                 <div class="relative inline-block">
-                    <div
-                        class="w-28 h-28 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-4 border-white dark:border-gray-600 shadow-lg mb-2">
+                    <div class="w-28 h-28 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-4 border-white dark:border-gray-600 shadow-lg mb-2"
+                        [ngClass]="{'border-red-500 dark:border-red-500': userForm.get('profileImage')?.touched && userForm.get('profileImage')?.invalid && !profilePreview}">
                         <img *ngIf="profilePreview" [src]="profilePreview" alt="Vista previa de imagen"
                             class="w-full h-full object-cover" />
                         <div *ngIf="!profilePreview"
@@ -42,7 +42,11 @@
                     <input id="profileImage" type="file" accept="image/*" (change)="onImageSelected($event)"
                         class="hidden" />
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Imagen de perfil (recomendado: cuadrada)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Imagen de perfil (requerida)</p>
+                <div *ngIf="userForm.get('profileImage')?.touched && userForm.get('profileImage')?.invalid && !profilePreview"
+                    class="text-red-500 dark:text-red-400 text-xs mt-1 animate-fadeIn">
+                    La imagen de perfil es obligatoria
+                </div>
             </div>
         </div>
 
@@ -187,17 +191,24 @@
                                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <input id="email" type="email" formControlName="email"
-                        class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        [ngClass]="{'bg-gray-100 dark:bg-gray-600': isEditing, 'border-red-300 focus:ring-red-500 focus:border-red-500 dark:border-red-700 dark:focus:ring-red-500 dark:focus:border-red-500': userForm.get('email')?.touched && userForm.get('email')?.invalid}">
+
+                    <input id="email" type="email" formControlName="email" [readonly]="isEditing" class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm 
+                focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors 
+            bg-primary-10 dark:bg-gray-700 text-gray-900 dark:text-white" [ngClass]="{
+        'bg-gray-100 dark:bg-gray-600': isEditing,
+        'border-red-300 focus:ring-red-500 focus:border-red-500 dark:border-red-700 dark:focus:ring-red-500 dark:focus:border-red-500':
+        userForm.get('email')?.touched && userForm.get('email')?.invalid
+        }" />
                 </div>
+
+                <!-- Mensajes de error -->
                 <div *ngIf="userForm.get('email')?.touched && userForm.get('email')?.invalid"
                     class="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 animate-fadeIn">
                     <div *ngIf="userForm.get('email')?.errors?.['required']">El correo es obligatorio</div>
                     <div *ngIf="userForm.get('email')?.errors?.['email']">Ingrese un correo válido</div>
+                    <div *ngIf="userForm.get('email')?.errors?.['emailTaken']">Este correo ya está registrado</div>
                 </div>
             </div>
-
             <!-- Contraseña -->
             <div class="form-group">
                 <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

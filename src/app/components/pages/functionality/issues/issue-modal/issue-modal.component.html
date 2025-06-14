@@ -1,5 +1,5 @@
- <!-- Modal -->
- <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+<!-- Modal -->
+<div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
   <div class="bg-white p-6 rounded-lg w-96">
     <h2 class="text-2xl font-bold mb-4">
       {{ isEditMode ? 'Editar Tema' : 'Agregar Tema' }}
@@ -29,6 +29,12 @@
         <div *ngIf="dateError" class="text-red-500 text-sm mt-1">
           La fecha y hora seleccionada no puede ser anterior a la fecha actual.
         </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-lg font-semibold" for="observation">Observación</label>
+        <input class="border p-2 w-full rounded" id="observation" [(ngModel)]="issueForm.observation" name="observation"
+          required />
       </div>
 
       <div class="flex justify-end">

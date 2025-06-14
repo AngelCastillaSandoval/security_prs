@@ -1,203 +1,242 @@
-<div class="container-fluid py-4 bg-body-tertiary min-vh-100">
-    <div class="container-lg bg-white rounded-4 shadow-sm p-4">
-        <h2 class="text-center mb-4 display-5 fw-semibold text-primary">
-            <i class="bi bi-layers me-2"></i>Gestión de Sesiones
-        </h2>
 
-        <!-- Barra de herramientas -->
-        <div class="row g-3 mb-4 align-items-center">
-            <div class="col-md-6">
-                <div class="input-group shadow-sm rounded-3">
-                    <span class="input-group-text bg-light border-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control border-0 bg-light" placeholder="Buscar sesiones..."
-                        [(ngModel)]="searchTerm" (keyup)="searchSessions()">
-                    <button class="btn btn-light border-0" type="button" (click)="clearSearch()">
-                        <i class="bi bi-x-circle text-muted"></i>
-                    </button>
+<!-- session.component.html -->
+<div class="container-fluid py-5" style="background: linear-gradient(120deg, #f8f9fa, #e9ecef);">
+    <div class="container-lg bg-white rounded-4 shadow p-0 overflow-hidden">
+        <!-- Header con gradiente -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="m-0 display-5 fw-bold">
+                <i class="bi bi-calendar-event me-2"></i>Gestión de Sesiones
+            </h2>
+        </div>
+
+        <!-- Panel de control -->
+        <div class="p-4 border-bottom">
+            <div class="row g-4">
+                <!-- Estadísticas en tarjetas -->
+                <div class="col-md-12">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card bg-primary bg-opacity-10 border-0 text-primary h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill fs-1 me-3"></i>
+                                    <div>
+                                        <h6 class="m-0">Sesiones Activas</h6>
+                                        <h3 class="m-0">{{viewStatus === 'A' ? filteredSessions.length : sessions.length - filteredSessions.length || 0}}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger bg-opacity-10 border-0 text-danger h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <i class="bi bi-x-circle-fill fs-1 me-3"></i>
+                                    <div>
+                                        <h6 class="m-0">Sesiones Inactivas</h6>
+                                        <h3 class="m-0">{{viewStatus === 'I' ? filteredSessions.length : sessions.length - filteredSessions.length || 0}}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-md-6">
-                <div class="d-flex gap-2 justify-content-end">
-                    <div class="btn-group shadow-sm">
-                        <button class="btn btn-danger" (click)="exportToPDF()">
-                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                <!-- Barra de herramientas -->
+                <div class="col-md-6">
+                    <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                        <span class="input-group-text bg-white border-0 text-primary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 py-2 px-3" 
+                            placeholder="Buscar sesiones por nombre o descripción..."
+                            [(ngModel)]="searchTerm" (keyup)="searchSessions()">
+                        <button class="btn btn-light border-0 text-muted" type="button" (click)="clearSearch()" 
+                            *ngIf="searchTerm">
+                            <i class="bi bi-x-circle"></i>
                         </button>
-                        <button class="btn btn-success" (click)="exportToExcel()">
-                            <i class="bi bi-file-earmark-excel"></i> Excel
-                        </button>
-                        <button class="btn btn-primary" (click)="exportToCSV()">
-                            <i class="bi bi-file-earmark-text"></i> CSV
+                        <button class="btn btn-primary px-3" type="button" (click)="searchSessions()">
+                            <i class="bi bi-funnel-fill me-1"></i> Filtrar
                         </button>
                     </div>
-                    <button class="btn btn-primary shadow-sm" (click)="openModal()">
-                        <i class="bi bi-plus-circle me-2"></i>Nueva Sesión
-                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <div class="btn-group shadow-sm rounded-3 overflow-hidden">
+                            <button class="btn btn-danger" (click)="exportToPDF()">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            </button>
+                            <button class="btn btn-success" (click)="exportToExcel()">
+                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            </button>
+                            <button class="btn btn-primary" (click)="exportToCSV()">
+                                <i class="bi bi-file-earmark-text-fill me-1"></i> CSV
+                            </button>
+                        </div>
+                        <button class="btn btn-primary rounded-pill shadow-sm px-4" (click)="openModal()">
+                            <i class="bi bi-plus-circle-fill me-2"></i>Nueva Sesión
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs y contenido -->
-        <ul class="nav nav-tabs nav-justified mb-4">
-            <li class="nav-item">
-                <a class="nav-link" [ngClass]="{'active': viewStatus === 'A'}" (click)="toggleViewStatus()">
-                    <i class="bi bi-check-circle me-2"></i>Activas
+        <!-- Tabs con estilo mejorado -->
+        <ul class="nav nav-pills nav-fill p-3 bg-light">
+            <li class="nav-item px-3">
+                <a class="nav-link rounded-pill" [ngClass]="{'active': viewStatus === 'A'}" (click)="toggleViewStatus()">
+                    <i class="bi bi-check-circle-fill me-2"></i>Sesiones Activas
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" [ngClass]="{'active': viewStatus === 'I'}" (click)="toggleViewStatus()">
-                    <i class="bi bi-x-circle me-2"></i>Inactivas
+            <li class="nav-item px-3">
+                <a class="nav-link rounded-pill" [ngClass]="{'active': viewStatus === 'I'}" (click)="toggleViewStatus()">
+                    <i class="bi bi-x-circle-fill me-2"></i>Sesiones Inactivas
                 </a>
             </li>
         </ul>
 
-        <!-- Contenido de tabs -->
-        <div class="tab-content">
+        <!-- Contenido de tabs con mejor diseño -->
+        <div class="tab-content p-4">
             <div class="table-responsive rounded-3 shadow-sm">
                 <table class="table table-hover align-middle mb-0">
-                    <thead [ngClass]="{'table-primary': viewStatus === 'A', 'table-danger': viewStatus === 'I'}">
+                    <thead [ngClass]="{'table-primary text-primary': viewStatus === 'A', 'table-danger text-danger': viewStatus === 'I'}">
                         <tr>
-                            <th><i class="bi bi-type me-2"></i>Nombre</th>
-                            <th><i class="bi bi-text-paragraph me-2"></i>Descripción</th>
-                            <th class="pe-4 text-end">Acciones</th>
+                            <th class="ps-4 py-3"><i class="bi bi-tag-fill me-2"></i>Nombre</th>
+                            <th class="py-3"><i class="bi bi-card-text me-2"></i>Descripción</th>
+                            <th class="pe-4 py-3 text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <ng-container *ngIf="!isLoading; else loadingTemplate">
-                            <ng-container *ngIf="filteredSessions.length > 0; else noDataTemplate">
-                                <tr *ngFor="let session of filteredSessions" class="position-relative">
-                                    <td class="fw-medium">{{ session.name }}</td>
-                                    <td>{{ session.description }}</td>
-                                    <td class="pe-4 text-end">
-                                        <!-- Acciones para sesiones activas -->
-                                        <ng-container *ngIf="viewStatus === 'A'">
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-warning" title="Editar"
-                                                    (click)="getSessionForEdit(session.id)">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger" title="Eliminar"
-                                                    (click)="deleteSession(session.id)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </ng-container>
-
-                                        <!-- Acciones para sesiones inactivas -->
-                                        <ng-container *ngIf="viewStatus === 'I'">
-                                            <button class="btn btn-outline-success btn-sm" title="Restaurar"
-                                                (click)="restoreSession(session.id)">
-                                                <i class="bi bi-arrow-clockwise me-1"></i> Restaurar
+                            <tr *ngFor="let session of filteredSessions" class="position-relative border-bottom">
+                                <td class="ps-4 fw-medium" [ngClass]="{'text-primary': viewStatus === 'A', 'text-danger text-decoration-line-through': viewStatus === 'I'}">
+                                    {{ session.name }}
+                                </td>
+                                <td>
+                                    <span [ngClass]="{'text-muted': viewStatus === 'I'}">
+                                        {{ session.description }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <!-- Acciones para sesiones activas -->
+                                    <ng-container *ngIf="viewStatus === 'A'">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-warning rounded-start" 
+                                                (click)="getSessionForEdit(session.id)">
+                                                <i class="bi bi-pencil-square"></i>
                                             </button>
-                                        </ng-container>
-                                    </td>
-                                </tr>
-                            </ng-container>
+                                            <button class="btn btn-outline-danger rounded-end" 
+                                                (click)="deleteSession(session.id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Acciones para sesiones inactivas -->
+                                    <ng-container *ngIf="viewStatus === 'I'">
+                                        <button class="btn btn-outline-success btn-sm rounded-pill px-3" 
+                                            (click)="restoreSession(session.id)">
+                                            <i class="bi bi-arrow-clockwise me-1"></i> 
+                                        </button>
+                                    </ng-container>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredSessions.length === 0">
+                                <td colspan="3" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="bi" 
+                                        [ngClass]="{'bi-clipboard-x text-muted display-1': viewStatus === 'A', 'bi-archive text-muted display-1': viewStatus === 'I'}">
+                                        </i>
+                                        <p class="mt-3 mb-0 text-muted">No se encontraron sesiones {{viewStatus === 'A' ? 'activas' : 'inactivas'}}</p>
+                                        <button *ngIf="viewStatus === 'A'" class="btn btn-sm btn-primary mt-3" (click)="openModal()">
+                                            <i class="bi bi-plus-circle me-2"></i>Crear nueva Sesión
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         </ng-container>
+                        <ng-template #loadingTemplate>
+                            <tr>
+                                <td colspan="3" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Cargando sesiones...</p>
+                                </td>
+                            </tr>
+                        </ng-template>
                     </tbody>
                 </table>
-
-                <!-- Templates para estados de la tabla -->
-                <ng-template #loadingTemplate>
-                    <tr>
-                        <td colspan="4" class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-3 text-muted">Cargando sesiones...</p>
-                        </td>
-                    </tr>
-                </ng-template>
-
-                <ng-template #noDataTemplate>
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">
-                            <i class="bi bi-info-circle me-2"></i>No se encontraron sesiones {{ viewStatus === 'A' ?
-                            'activas' : 'inactivas' }}
-                            <div class="mt-3">
-                                <button *ngIf="viewStatus === 'A'" class="btn btn-primary" (click)="openModal()">
-                                    <i class="bi bi-plus-circle me-2"></i> Crear nueva sesión
-                                </button>
-                                <button *ngIf="viewStatus === 'I'" class="btn btn-outline-secondary"
-                                    (click)="toggleViewStatus()">
-                                    <i class="bi bi-list me-2"></i> Ver sesiones activas
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </ng-template>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal con Tailwind CSS -->
-<div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto overflow-hidden">
-        <!-- Modal Header -->
-        <div class="bg-primary text-white px-4 py-3 flex justify-between items-center">
-            <h5 class="text-lg font-medium">
-                <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-file-earmark-plus'"></i>
-                {{ isEditMode ? ' Editar Sesión' : ' Nueva Sesión' }}
-            </h5>
-            <button type="button" class="text-white hover:text-gray-200" (click)="resetForm()">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="p-4">
-            <form [formGroup]="sessionForm">
-                <div class="space-y-4">
-                    <div>
-                        <label for="name" class="block font-medium mb-1">
-                            <i class="bi bi-type me-2"></i>Nombre <span class="text-danger">*</span>
-                        </label>
-                        <input id="name" formControlName="name" class="w-full px-3 py-2 border rounded-md"
-                            [ngClass]="{'border-red-500': sessionForm.get('name')?.invalid && sessionForm.get('name')?.touched}"
-                            placeholder="Nombre de la sesión" />
-                        <div *ngIf="sessionForm.get('name')?.invalid && sessionForm.get('name')?.touched"
-                            class="text-red-500 text-sm mt-1">
-                            <div *ngIf="sessionForm.get('name')?.errors?.['required']">El nombre es obligatorio</div>
-                            <div *ngIf="sessionForm.get('name')?.errors?.['maxlength']">El nombre no puede exceder los
-                                100 caracteres</div>
+<!-- Modal para agregar/editar con diseño mejorado -->
+<div class="modal fade" id="sessionModal" tabindex="-1" aria-labelledby="sessionModalLabel" aria-hidden="true" [ngClass]="{'show': isModalOpen}" [ngStyle]="{'display': isModalOpen ? 'block' : 'none'}">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary bg-gradient text-white">
+                <h5 class="modal-title" id="sessionModalLabel">
+                    <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-file-earmark-plus'"></i>
+                    {{ isEditMode ? ' Editar Sesión' : ' Nueva Sesión' }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="resetForm()"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label for="name" class="form-label fw-bold text-primary">
+                                <i class="bi bi-tag me-2"></i>Nombre
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white border-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </span>
+                                <input id="name" type="text" class="form-control border-primary" formControlName="name"
+                                    placeholder="Ingrese el nombre de la sesión">
+                            </div>
+                            <div class="form-text text-danger" *ngIf="sessionForm.get('name')?.touched && sessionForm.get('name')?.hasError('required')">
+                                El nombre es requerido
+                            </div>
+                            <div class="form-text text-danger" *ngIf="sessionForm.get('name')?.touched && sessionForm.get('name')?.hasError('maxlength')">
+                                El nombre no puede exceder los 100 caracteres
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="description" class="form-label fw-bold text-primary">
+                                <i class="bi bi-card-text me-2"></i>Descripción
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-info text-white border-info">
+                                    <i class="bi bi-file-text"></i>
+                                </span>
+                                <textarea id="description" class="form-control border-info" formControlName="description"
+                                    placeholder="Ingrese la descripción de la sesión" rows="4"></textarea>
+                            </div>
+                            <div class="form-text text-danger" *ngIf="sessionForm.get('description')?.touched && sessionForm.get('description')?.hasError('required')">
+                                La descripción es requerida
+                            </div>
+                            <div class="form-text text-danger" *ngIf="sessionForm.get('description')?.touched && sessionForm.get('description')?.hasError('maxlength')">
+                                La descripción no puede exceder los 500 caracteres
+                            </div>
                         </div>
                     </div>
-
-                    <div>
-                        <label for="description" class="block font-medium mb-1">
-                            <i class="bi bi-text-paragraph me-2"></i>Descripción <span class="text-danger">*</span>
-                        </label>
-                        <textarea id="description" formControlName="description"
-                            class="w-full px-3 py-2 border rounded-md"
-                            [ngClass]="{'border-red-500': sessionForm.get('description')?.invalid && sessionForm.get('description')?.touched}"
-                            placeholder="Descripción detallada de la sesión" rows="4"></textarea>
-                        <div *ngIf="sessionForm.get('description')?.invalid && sessionForm.get('description')?.touched"
-                            class="text-red-500 text-sm mt-1">
-                            <div *ngIf="sessionForm.get('description')?.errors?.['required']">La descripción es
-                                obligatoria</div>
-                            <div *ngIf="sessionForm.get('description')?.errors?.['maxlength']">La descripción no puede
-                                exceder los 500 caracteres</div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="bg-gray-50 px-4 py-3 flex justify-end gap-2">
-            <button type="button" class="btn btn-secondary" (click)="resetForm()">
-                <i class="bi bi-x-circle me-2"></i>Cancelar
-            </button>
-            <button type="button" class="btn btn-success" (click)="onSubmit()"
-                [disabled]="sessionForm.invalid || isLoading">
-                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"
-                    aria-hidden="true"></span>
-                <i *ngIf="!isLoading" class="bi" [ngClass]="isEditMode ? 'bi-check-circle' : 'bi-save'"></i>
-                {{ isEditMode ? ' Actualizar' : ' Guardar' }}
-            </button>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="resetForm()">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" [disabled]="sessionForm.invalid || isLoading"
+                    (click)="onSubmit()">
+                    <i class="bi" [ngClass]="isEditMode ? 'bi-check-circle' : 'bi-save'"></i>
+                    {{ isEditMode ? ' Actualizar' : ' Guardar' }}
+                    <span *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
+<div class="modal-backdrop fade show" *ngIf="isModalOpen"></div>

@@ -62,7 +62,7 @@ export class AuthGuard implements CanActivate, CanMatch {
         if (userRole === expectedRole) {
           return of(true);
         } else {
-          return of(this.router.createUrlTree(["/dashboard"])); // redirige si no tiene el rol
+          return of(this.router.createUrlTree(["/dashboard"]));
         }
       })
     );

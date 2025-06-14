@@ -8,6 +8,9 @@ import { WorkshopService } from "../../../../services/workshop.service"
 import { PersonaService } from "../../../../services/person.service"
 import { forkJoin } from "rxjs"
 import { AttendanceModalComponent } from "./attendance-modal/attendance-modal.component"
+import { AuthService } from "../../../../auth/services/auth.service"
+import { ActivityService } from "../../../../services/ui/activity.service"
+import Swal from "sweetalert2"
 
 @Component({
   selector: "app-attendance",
@@ -47,10 +50,17 @@ export class AttendanceComponent implements OnInit {
     state: "",
   }
 
+  // Variables para el control de permisos
+  userRole: string | null = null
+  isAdmin = false
+  isUser = false
+
   constructor(
     private issueService: IssueService,
     private personService: PersonaService,
     private workshopService: WorkshopService,
+    private authService: AuthService,
+    private activityService: ActivityService,
   ) { }
 
   ngOnInit(): void {
@@ -58,7 +68,79 @@ export class AttendanceComponent implements OnInit {
     this.getIssues()
     this.getPersons()
     this.setCurrentDateTime()
+    this.checkUserPermissions()
   }
+
+   /**
+   * 🔒 Verificar permisos del usuario
+   */
+  private checkUserPermissions(): void {
+    this.userRole = this.authService.getRole()
+    this.isAdmin = this.authService.isAdminSync()
+    this.isUser = this.authService.isUserSync()
+
+    console.log("Rol del usuario:", this.userRole)
+    console.log("Es admin:", this.isAdmin)
+    console.log("Es user:", this.isUser)
+  }
+
+  /**
+   * 🚫 Verificar si el usuario puede realizar operaciones de escritura
+   */
+  private canPerformWriteOperation(): boolean {
+    return this.authService.canWrite()
+  }
+
+  /**
+     * ⚠️ Mostrar mensaje de permisos insuficientes
+     */
+    private showPermissionDeniedAlert(): void {
+      Swal.fire({
+        title: "⚠️ Acceso Restringido",
+        text: "No puedes realizar esta función. Estás en modo usuario, solo puedes ver la información.",
+        icon: "warning",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#f59e0b",
+        backdrop: true,
+        allowOutsideClick: false,
+        customClass: {
+          popup: "swal2-popup-custom",
+        },
+      })
+    }
+
+  private logAttendanceActivity(action: string, attendanceData: any): void {
+  this.authService.getLoggedUserInfo().subscribe({
+    next: (currentUser) => {
+      const attendance = "attendance" in attendanceData ? attendanceData.attendance : attendanceData;
+
+      const activity = {
+        imagen: currentUser?.profileImage || "/placeholder.svg?height=40&width=40",
+        nombre: `${currentUser?.name || ""} ${currentUser?.lastName || ""}`.trim() || currentUser?.email || "Usuario",
+        modulo: "Asistencias",
+        accion: `${action} la asistencia del ${attendance.date} para ${attendance.personName || 'participante'}`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada: ${action} asistencia ${attendance.date}`);
+    },
+    error: () => {
+      const attendance = "attendance" in attendanceData ? attendanceData.attendance : attendanceData;
+
+      const activity = {
+        imagen: "/placeholder.svg?height=40&width=40",
+        nombre: "Usuario del sistema",
+        modulo: "Asistencias",
+        accion: `${action} la asistencia del ${attendance.date} para ${attendance.personName || 'participante'}`,
+      };
+
+      this.activityService.logActivity(activity);
+      console.log(`Actividad registrada (fallback): ${action} asistencia ${attendance.date}`);
+    },
+  });
+}
+
+
 
   getAttendances(): void {
     this.isLoadingAttendance = true
@@ -334,6 +416,15 @@ export class AttendanceComponent implements OnInit {
 
     console.log("Filtered Persons:", this.filteredPersons);
     console.log("Filtered Issues:", this.filteredIssues);
+  }
+
+  countAttendance(personId: number, type: string): number {
+    // Solo cuenta los issues filtrados (respeta el filtro de taller)
+    return this.attendance.filter(att =>
+      att.personId === personId &&
+      this.filteredIssues.some(issue => issue.id === att.issueId) &&
+      att.record === type
+    ).length;
   }
 
 }

@@ -1,4 +1,4 @@
-import { ActivityService } from './../../../../services/ui/activity.service';
+import { ActivityService } from "./../../../../services/ui/activity.service"
 import { AuthService } from "./../../../../auth/services/auth.service"
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
@@ -116,6 +116,7 @@ export class UsersComponent implements OnInit {
         this.selectedUser = null
     }
 
+    // Modificar el método saveUser para manejar errores de email duplicado
     saveUser(user: User): void {
         if (this.isEditing) {
             this.userService.updateUser(user).subscribe({
@@ -125,9 +126,22 @@ export class UsersComponent implements OnInit {
 
                     this.loadAllUsers()
                     this.closeForm()
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "¡Éxito!",
+                        text: "Usuario actualizado correctamente",
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    })
                 },
                 error: (error) => {
-                    alert("Error al actualizar el usuario.")
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: error.message || "Error al actualizar el usuario.",
+                    })
                 },
             })
         } else {
@@ -138,9 +152,30 @@ export class UsersComponent implements OnInit {
 
                     this.loadAllUsers()
                     this.closeForm()
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "¡Éxito!",
+                        text: "Usuario creado correctamente",
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                    })
                 },
                 error: (error) => {
-                    alert("Error al crear el usuario.")
+                    if (error.message === "El correo electrónico ya está registrado") {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Email duplicado",
+                            text: "El correo electrónico ya está registrado en el sistema.",
+                        })
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: error.message || "Error al crear el usuario.",
+                        })
+                    }
                 },
             })
         }
